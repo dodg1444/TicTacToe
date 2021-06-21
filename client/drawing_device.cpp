@@ -521,10 +521,10 @@ void drawing_device::event_handler(){
 #include <windows.h>
 #include <shellapi.h>
 
-                    ShellExecute(0, 0, L"https://github.com/dodg1444", 0, 0 , SW_SHOW );
+                    ShellExecute(0, 0, L"https://github.com/dodg1444/TicTacToe", 0, 0 , SW_SHOW );
 
 #elif __linux__
-                    system("open https://github.com/dodg1444");
+                    system("open https://github.com/dodg1444/TicTacToe > /dev/null");
 #endif
 
                     break;
