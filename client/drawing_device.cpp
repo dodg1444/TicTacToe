@@ -226,6 +226,7 @@ void drawing_device::init_ui(){
     for (int i = 0; i < 9; ++i){
         ints_.push_back(i);
         symbols_.push_back(not_pressed_button_symbol_);
+        cell_colors_.push_back(cells_color_);
     }
 
 
@@ -239,11 +240,15 @@ void drawing_device::init_ui(){
                     field_.take_cell(index);
                     my_turn_.store(false);
                     ++turns_done_;
-                    if (won()){
-                        // you_lost {17,none,none}
-                        // send info about your victory
+                    int won_ = won();
+                    if (won_){
+                        set_victory_cells_color(won_);
+
                         left_column_text_ = L"Victory is ours!";
-                        send(Query("17, none, none"));
+
+                        // you_lost {17,123,none}
+                        // send info
+                        send(Query("17,"+ to_string(won_) +",none"));
                         return;
                     }
 
@@ -303,26 +308,26 @@ void drawing_device::init_ui(){
         return vbox({
                     // game field
                     vbox({
-                        hbox({
-                            cells_[0]->Render() | flex_grow,
+                            hbox({
+                            cells_[0]->Render() | flex_grow | color(cell_colors_[0]),
 //                                filler(),
-                            cells_[1]->Render() | flex_grow,
+                            cells_[1]->Render() | flex_grow | color(cell_colors_[1]),
 //                                filler(),
-                            cells_[2]->Render() | flex_grow,
+                            cells_[2]->Render() | flex_grow | color(cell_colors_[2]),
                         }),
                         hbox({
-                            cells_[3]->Render()| flex_grow,
+                            cells_[3]->Render()| flex_grow | color(cell_colors_[3]),
 //                                filler(),
-                            cells_[4]->Render()| flex_grow,
+                            cells_[4]->Render()| flex_grow | color(cell_colors_[4]),
 //                                filler(),
-                            cells_[5]->Render()| flex_grow,
+                            cells_[5]->Render()| flex_grow | color(cell_colors_[5]),
                         }),
                         hbox({
-                            cells_[6]->Render()| flex_grow,
+                            cells_[6]->Render()| flex_grow | color(cell_colors_[6]),
 //                                filler(),
-                            cells_[7]->Render()| flex_grow,
+                            cells_[7]->Render()| flex_grow | color(cell_colors_[7]),
 //                                filler(),
-                            cells_[8]->Render()| flex_grow,
+                            cells_[8]->Render()| flex_grow | color(cell_colors_[8]),
                         })
                     }) | border ,
                     filler() | yflex_grow,
@@ -382,12 +387,12 @@ void drawing_device::init_ui(){
                         hcenter(bold(text(upper_text_)))}),
                         separator(),
                         hbox({
-                            vbox({hcenter(bold(text(left_column_text_))) | color(Color::DarkMagenta),
+                            vbox({hcenter(bold(text(left_column_text_))) | color(main_color_),
                                   separator(),
                                   left_side_content_->Render(),
                             }) | flex,
                             separator(),
-                            vbox({hcenter(bold(text(L"Chat"))) | color(Color::DarkMagenta),
+                            vbox({hcenter(bold(text(L"Chat"))) | color(main_color_),
                                   separator(),
                                   chat_printed_messages_->Render() | size(HEIGHT, EQUAL, number_of_shown_messages_)
                                   ,
@@ -473,7 +478,9 @@ void drawing_device::draw_fight(){
 // player_joined {14, Frank, not_ready}
 // chose_cell {15, 0-8, none}
 // your_turn {16, none, none}
-// you_lost {17,none,none}
+// you_lost {17,123,none} // paint losing cells
+// restart_fight {18, none, none}
+// tie {19,none,none}
 
 void drawing_device::event_handler(){
 //    cout << "Event handler invoked\n";
@@ -572,7 +579,7 @@ void drawing_device::set_queue_ptr(const shared_ptr<threadsafe_q<Query>> ptr){
 // player_joined {14, Frank, not_ready}
 // chose_cell {15, 0-8, none}
 // your_turn {16, none, none}
-// you_lost {17,none,none}
+// you_lost {17,123,none} // paint losing cells
 // restart_fight {18, none, none}
 // tie {19,none,none}
 
@@ -670,8 +677,10 @@ void drawing_device::process_query(shared_ptr<Query> q_ptr){
 
 
 
-        case(17) : { // you_lost {17,none,none}
+        case(17) : { // you_lost {17,123,none}
             left_column_text_ = L"Ha ha you lost";
+            set_defeat_cells_color(stoi(q_ptr->sender_));
+
             my_turn_.store(false);
             break;
         }
@@ -739,8 +748,27 @@ void drawing_device::reset_game_field(){
     for (auto& symb : symbols_)
         symb = not_pressed_button_symbol_;
 
+    for (auto& cell : cell_colors_)
+        cell = cells_color_;
+
     turns_done_ = 0;
 
+};
+
+
+void drawing_device::set_victory_cells_color(const int cells_numbers){
+    // example won_ = 123
+    cell_colors_[cells_numbers % 10] = victory_cell_color_; // 1
+    cell_colors_[cells_numbers / 10 % 10] = victory_cell_color_; // 2
+    cell_colors_[cells_numbers / 100 % 10] = victory_cell_color_; // 3
+};
+
+
+void drawing_device::set_defeat_cells_color(const int cells_numbers){
+    // example won_ = 123
+    cell_colors_[cells_numbers % 10] = defeat_cell_color_; // 1
+    cell_colors_[cells_numbers / 10 % 10] = defeat_cell_color_; // 2
+    cell_colors_[cells_numbers / 100 % 10] = defeat_cell_color_; // 3
 };
 
 
@@ -822,35 +850,35 @@ drawing_device::Game_Field::Game_Field(){
 }
 
 
-bool /*int*/ drawing_device::won(){
+int drawing_device::won(){
 
     if (turns_done_ > 2){
         if (field_.diag_row_1())
-            return true;
+            return 246;
 
         if (field_.diag_row_2())
-            return true;
+            return 840;
 
         if (field_.hor_row())
-            return true;
+            return 345;
 
         if (field_.vert_row())
-            return true;
+            return 147;
 
         if (field_.top_row())
-            return true;
+            return 210;
 
         if (field_.bottom_row())
-            return true;
+            return 678;
 
         if (field_.left_row())
-            return true;
+            return 630;
 
         if (field_.right_row())
-            return true;
+            return 258;
     }
 
-    return false;
+    return 0;
 };
 
 
@@ -903,6 +931,10 @@ void drawing_device::Game_Field::init(){
     for (auto& cell : cells_)
         cell = false;
 };
+
+
+
+
 
 
 

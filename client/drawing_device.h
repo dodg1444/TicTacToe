@@ -110,7 +110,10 @@ public:
         bool cells_[9];
     };
 
-    bool won();
+    int won();
+
+    void set_victory_cells_color(const int);
+    void set_defeat_cells_color(const int);
 
 private:
     wstring nickname_ = L"Default";
@@ -118,6 +121,7 @@ private:
     future<void> screen_loop_;
     future<void> screen_updater_;
     chrono::duration<float, ratio<1,1>> update_every_;
+
 
 
 ////////////////////////////////// MENU ///////////////////////////////////////////
@@ -183,6 +187,9 @@ private:
     vector<shared_ptr<ComponentBase>> cells_; // buttons
     vector<wstring> symbols_; // symbols for each cell
     vector<int> ints_; // [0-8] ints for buttons to refer to
+
+    vector<Color> cell_colors_; // own color for each cell
+
     wstring pressed_button_symbol_;
     wstring opponent_pressed_button_symbol_;
     wstring not_pressed_button_symbol_;
@@ -195,17 +202,18 @@ private:
     atomic<bool> spin_;
 
 
-
-
 ////////////////////////////////// GITHUB /////////////////////////////////////////
 
     // open in browser
 
-
-
-
 ////////////////////////////////// MAIN ///////////////////////////////////////////
     game_stage stage_;
+
+    Color main_color_ = Color::DarkMagenta;
+    Color cells_color_ = Color::DarkCyan;
+
+    Color victory_cell_color_ = Color::DarkGreen;
+    Color defeat_cell_color_ = Color::DarkRed;
 
     ScreenInteractive screen_;
     Component container_;
