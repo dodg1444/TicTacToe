@@ -435,11 +435,14 @@ void drawing_device::draw_exit(){
 
 }
 
+
 void drawing_device::draw_host_game(){
+    in_fight_.store(true);
+    left_column_text_ = L"Room";
     set_title(L"Waiting for an opponent...");
     drawn_tab_number_ = 3;
-
 }
+
 
 void drawing_device::draw_join_game(){
     stage_ = game_stage::lobby;
@@ -457,7 +460,6 @@ void drawing_device::draw_fight(){
     left_column_text_ = L"Opponent's turn";
     drawn_tab_number_ = 5;
 };
-
 
 
 //         query patterns
@@ -595,6 +597,14 @@ void drawing_device::process_query(shared_ptr<Query> q_ptr){
             break;
         }
         case(6) : { // leave_game {6, none, none}
+
+
+
+            if (in_fight_.load()){
+                reset_game_field();
+                draw_host_game();
+            }
+
             set_title(L"Waiting for an opponent...");
             opponent_nickname_ = L"Waiting...";
             opponent_status_ = L"Waiting...";
