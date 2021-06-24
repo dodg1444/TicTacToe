@@ -1,6 +1,6 @@
 # TicTacToe
 
-A (soon-to-be) multiplayer Tic Tac Toe game.
+A multiplayer Tic Tac Toe game.
 
 
 ## Installation
@@ -12,6 +12,6 @@ This application depends on the [Boost](https://www.boost.org/) System library. 
 ### Client and Server
 
 ```
+chmod +x install.sh
 ./install.sh
-
 ```
