@@ -7,20 +7,11 @@ A (soon-to-be) multiplayer Tic Tac Toe game.
 
 This application depends on the [Boost](https://www.boost.org/) System library. On Debian-based distributions it can be installed with this command:
 
-`sudo apt install libboost-system-dev`
+`sudo apt install libboost-all-dev`
 
-### Client
-
-```
-cd client
-cmake .
-make
-```
-
-### Server
+### Client and Server
 
 ```
-cd server
-cmake .
-make
+./install.sh
+
 ```
