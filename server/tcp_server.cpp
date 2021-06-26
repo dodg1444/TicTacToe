@@ -1,12 +1,13 @@
 #include "tcp_server.h"
 
 
-tcp_server::tcp_server(io_context& io_context) : io_context_(io_context),
-    acceptor_(io_context, ip::tcp::endpoint(ip::tcp::v4(), 6666))
+tcp_server::tcp_server(io_context& io_context, const int& port) : io_context_(io_context),
+    acceptor_(io_context, ip::tcp::endpoint(ip::tcp::v4(), port))
 {
 
     clients_ = make_shared<thread_safe_unordered_map<string, session::pointer>>();
     rooms_ = make_shared<thread_safe_unordered_map<string, shared_ptr<room>>>();
+    debug_msg("Started listening on 127.0.0.0:", port);
     start_accept();
 
 }

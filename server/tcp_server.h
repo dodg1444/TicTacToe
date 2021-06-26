@@ -22,7 +22,7 @@ namespace asio = boost::asio;
 
 class tcp_server{
 public:
-    explicit tcp_server(io_context& io_context);
+    explicit tcp_server(io_context& io_context, const int& port);
 
 
 private:
