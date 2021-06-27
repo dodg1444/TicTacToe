@@ -7,7 +7,7 @@ tcp_server::tcp_server(io_context& io_context, const int& port) : io_context_(io
 
     clients_ = make_shared<thread_safe_unordered_map<string, session::pointer>>();
     rooms_ = make_shared<thread_safe_unordered_map<string, shared_ptr<room>>>();
-    debug_msg("Started listening on 127.0.0.0:", port);
+    cout << "Started listening on 127.0.0.0:" << port << "\n";
     start_accept();
 
 }

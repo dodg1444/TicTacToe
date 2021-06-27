@@ -21,6 +21,7 @@ using namespace std;
 template <typename Arg, typename... Args>
 inline void debug_msg(Arg&& arg, Args&&... args)
 {
+#ifndef RELEASE
     time_t curr_time;
     curr_time = time(nullptr);
     tm *tm_local = localtime(&curr_time);
@@ -30,6 +31,7 @@ inline void debug_msg(Arg&& arg, Args&&... args)
     using expander = int[];
     (void)expander{0, (void(cout << std::forward<Args>(args)), 0)...};
     cout << "\n";
+#endif
 }
 
 
