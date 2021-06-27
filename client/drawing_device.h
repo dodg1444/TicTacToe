@@ -36,7 +36,9 @@ using namespace ftxui;
 
 
 
-
+struct exit_exception : public std::exception {
+    const char * what () const throw();
+};
 
 class drawing_device{
 public:
@@ -52,6 +54,8 @@ public:
     void draw_host_game();
     void draw_join_game();
     void draw_fight();
+
+    void set_nickname(const string&);
 
     void event_handler();
 

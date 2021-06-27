@@ -4,14 +4,12 @@
 
 client::client(io_context& io_context, const string& hostname, const string& port) :
                                 socket_(io_context), resolver_(io_context){
-
     tcp::resolver::query query(/*move(*/hostname/*)*/, /*move(*/port/*)*/);
     tcp::endpoint remote_endpoint = *resolver_.resolve(query);
     socket_.connect(remote_endpoint);
     online_.store(true);
 
     queries_to_send_ = make_shared<threadsafe_q<Query>>();
-    ui_.set_queue_ptr(queries_to_send_);
 
     service_msg(msg_type::DEBUG,  "Connected to " ,remote_endpoint.address(), ":", remote_endpoint.port());
 
@@ -35,7 +33,7 @@ void client::send(string msg){
     }
 
     else {
-        ui_.set_title(L"Server is offline");
+        ui_->set_title(L"Server is offline");
 //        service_msg(msg_type::DEBUG,  "Failed writing to socket: ", write_error.message());
         online_.store(false);
     }
@@ -56,7 +54,7 @@ string client::read(){
     }
 
     else {
-        ui_.set_title(L"Server is offline");
+        ui_->set_title(L"Server is offline");
 //        service_msg(msg_type::DEBUG,  "Failed reading from socket: ", read_error.message());
         online_.store(false);
         return "Error";
@@ -67,9 +65,14 @@ string client::read(){
 
 
 // main loop
-void client::game_loop(){
+void client::init(const string& nickname){
+
     futures.push_back(reallyAsync(&client::async_read, this));
     futures.push_back(reallyAsync(&client::async_write, this));
+
+    ui_ = make_unique<drawing_device>();
+    ui_->set_queue_ptr(queries_to_send_);
+    ui_->set_nickname(nickname);
 
     for (const auto& fut : futures){
         fut.wait();
@@ -86,8 +89,8 @@ void client::parse_input(string msg){
 //    Query query(msg);
 //    auto query_ptr = make_shared<Query>(msg);
 
-//    ui_.queries_to_process_.push(query);
-    ui_.process_query(make_shared<Query>(msg));
+//    ui_->queries_to_process_.push(query);
+    ui_->process_query(make_shared<Query>(msg));
 
 
 //    service_msg(msg_type::INFO, "Parsed: ", msg);
@@ -103,7 +106,7 @@ void client::async_read(){
 void client::async_write(){
     while(online_.load()){
 //        string msg = stringify(queries_to_send_->wait_and_pop());
-//        ui_.set_title(wstring(msg.begin(), msg.end()));
+//        ui_->set_title(wstring(msg.begin(), msg.end()));
         send(stringify(queries_to_send_->wait_and_pop()));
     }
 }
@@ -112,6 +115,8 @@ void client::async_write(){
 string client::stringify(shared_ptr<Query> query){
     return query->type_ + "," + query->sender_ + "," + query->data_;
 }
+
+
 
 
 

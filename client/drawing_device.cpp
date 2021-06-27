@@ -11,9 +11,7 @@
 using namespace ftxui;
 
 
-
 drawing_device::drawing_device() : screen_(ScreenInteractive::TerminalOutput()){
-
     init_ui();
     screen_loop_ = reallyAsync(&ScreenInteractive::Loop, &screen_, layout_);
 }
@@ -102,9 +100,12 @@ void drawing_device::init_ui(){
 ////////////////////////////////// EXIT ///////////////////////////////////////////
 
     yes_button_text_ = L"Yes";
+
     yes_button_ = Button(&yes_button_text_, [&]{
         if (let_out_)
-            exit(0);
+            terminate(); // a dirty way to stop a program execution but it'll do for now
+
+
         yes_button_text_ = L"There is no coming back...";
         let_out_ = true;
     });
@@ -431,6 +432,7 @@ void drawing_device::draw_change_name(){
 
 void drawing_device::draw_exit(){
     set_title(L"Wanna leave?");
+    upper_text_ = L"Exit";
     drawn_tab_number_ = 2;
 
 }
@@ -779,6 +781,12 @@ void drawing_device::set_defeat_cells_color(const int cells_numbers){
     cell_colors_[cells_numbers % 10] = defeat_cell_color_; // 1
     cell_colors_[cells_numbers / 10 % 10] = defeat_cell_color_; // 2
     cell_colors_[cells_numbers / 100 % 10] = defeat_cell_color_; // 3
+};
+
+
+void drawing_device::set_nickname(const string& nickname){
+    nickname_ = to_wstring(nickname);
+    send(Query("2,"+to_string(new_name_) + ",none"));
 };
 
 

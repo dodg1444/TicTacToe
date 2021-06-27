@@ -23,7 +23,7 @@ public:
     client(io_context& io_context, const string& hostname, const string& port);
     void send(string msg);
     string read();
-    void game_loop();
+    void init(const string& nickname);
     void parse_input(string);
     void async_read();
     void async_write();
@@ -37,7 +37,7 @@ private:
     shared_ptr<threadsafe_q<Query>> queries_to_send_;
     vector<future<void>> futures;
 
-    drawing_device ui_;
+    unique_ptr<drawing_device> ui_;
 
 };
 
