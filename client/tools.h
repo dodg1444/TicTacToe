@@ -174,7 +174,7 @@ public:
 // player_joined {14, Frank, not_ready}
 // chose_cell {15, 0-8, none}
 // your_turn {16, none, none}
-// you_lost {17,none,none}
+// you_lost {17,123,none} // paint losing cells
 // restart_fight {18, none, none}
 // tie {19,none,none}
 

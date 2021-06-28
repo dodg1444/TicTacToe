@@ -135,10 +135,6 @@ public:
         return vect;
     }
 
-//    void print() const {
-//        for (auto& [key, value] : data)
-//            cout << "[" << key << " : " << value << "]\n";
-//    }
 
 private:
     unordered_map<Key, Value> data;
@@ -163,7 +159,9 @@ public:
     void push(T new_value){
         shared_ptr<T> data(make_shared<T>(move(new_value)));
         lock_guard<mutex> lk(mut);
+        #ifndef RELEASE
         cout << "Pushed " << *data << " into the q\n";
+        #endif
         data_q.push(data);
         data_cond.notify_one();
     }
@@ -182,7 +180,9 @@ public:
         data_cond.wait(lk, [this]{return !data_q.empty();});
         shared_ptr<T> res = data_q.front();
         data_q.pop();
+        #ifndef RELEASE
         cout << "Popped " << *res << " from the q\n";
+        #endif
         return res;
     }
 
