@@ -2,8 +2,7 @@
 #include <functional>  // for function
 #include <string>    // for wstring, allocator, basic_string
 #include <vector>    // for vector
-                        // for the king and the kingdom!
-
+                     // for the king and the kingdom!
 #include "drawing_device.h"
 
 
@@ -19,7 +18,6 @@ drawing_device::drawing_device() : screen_(ScreenInteractive::TerminalOutput()){
 
 void drawing_device::init_ui(){
 
-
 ////////////////////////////////// MENU ///////////////////////////////////////////
 
     stage_ = game_stage::menu;
@@ -29,7 +27,6 @@ void drawing_device::init_ui(){
     MenuBase::From(menu_)->focused_style = color(Color::Red) | bold;
     MenuBase::From(menu_)->selected_style = color(Color::Blue);
     draw_menu();
-    //    MenuBase::From(layout_)->selected_focused_style = bold | color(Color::Blue);
 
 ////////////////////////////////// CHAT ///////////////////////////////////////////
 
@@ -37,9 +34,13 @@ void drawing_device::init_ui(){
     InputBase::From(chat_input_)->on_enter = [&](){
         send(Query("4,"+ to_string(nickname_) + "," + to_string(chat_msg_)));
         Chat_msg msg(nickname_, chat_msg_);
-        chat_messages_.push_back(msg);
+        chat_messages_.push_back(move(msg));
         chat_msg_.clear();
     };
+
+    clear_chat_button_ = Button("Clear", [&]{
+        chat_messages_.clear();
+    });
 
     chat_printed_messages_ = Renderer([&]{
 
@@ -65,7 +66,8 @@ void drawing_device::init_ui(){
 
     chat_components_ = Container::Vertical({
                           chat_printed_messages_,
-                          chat_input_
+                          chat_input_,
+                          clear_chat_button_
                                            });
 
 
@@ -177,7 +179,6 @@ void drawing_device::init_ui(){
 
     rooms_list_ = Menu(&hosted_rooms_, &selected_room_);
 
-    // TO_DO:
     MenuBase::From(rooms_list_)->on_enter = [&](){
         draw_host_game();
         drawn_tab_number_ = 3;
@@ -288,12 +289,8 @@ void drawing_device::init_ui(){
     spinner_ = Renderer([&]{
         return hbox({
                         spinner(21,spinner_index_) | color(Color::Yellow3),
-//                        spinner(2,spinner_index_+1),
-//                        spinner(2,spinner_index_+2),
-//                        spinner(2,spinner_index_+3)
                     });
 });
-
 
 
     fight_container_ = Container::Vertical({
@@ -311,28 +308,21 @@ void drawing_device::init_ui(){
                     vbox({
                             hbox({
                             cells_[0]->Render() | flex_grow | color(cell_colors_[0]),
-//                                filler(),
                             cells_[1]->Render() | flex_grow | color(cell_colors_[1]),
-//                                filler(),
                             cells_[2]->Render() | flex_grow | color(cell_colors_[2]),
                         }),
                         hbox({
                             cells_[3]->Render()| flex_grow | color(cell_colors_[3]),
-//                                filler(),
                             cells_[4]->Render()| flex_grow | color(cell_colors_[4]),
-//                                filler(),
                             cells_[5]->Render()| flex_grow | color(cell_colors_[5]),
                         }),
                         hbox({
                             cells_[6]->Render()| flex_grow | color(cell_colors_[6]),
-//                                filler(),
                             cells_[7]->Render()| flex_grow | color(cell_colors_[7]),
-//                                filler(),
                             cells_[8]->Render()| flex_grow | color(cell_colors_[8]),
                         })
                     }) | border ,
                     filler() | yflex_grow,
-//                        yflex_grow(),
                     text(L""),
                     hbox({
                             leave_fight_button_->Render(),
@@ -343,14 +333,6 @@ void drawing_device::init_ui(){
                         })
                 });
     });
-
-
-
-
-
-
-
-
 
 ////////////////////////////////// MAIN ///////////////////////////////////////////
 
@@ -395,12 +377,14 @@ void drawing_device::init_ui(){
                             separator(),
                             vbox({hcenter(bold(text(L"Chat"))) | color(main_color_),
                                   separator(),
-                                  chat_printed_messages_->Render() | size(HEIGHT, EQUAL, number_of_shown_messages_)
-                                  ,
-                                  window(text(L"Message: "), chat_input_->Render()) | color(Color::Yellow3)
-                            }) | flex /*| size(WIDTH, EQUAL, 40) */,
+                                  chat_printed_messages_->Render() | size(HEIGHT, EQUAL, number_of_shown_messages_),
+                                  hbox({
+                                      window(text(L"Message: "), chat_input_->Render()) | color(Color::Yellow3),
+                                      clear_chat_button_->Render() | color(Color::Yellow3)
+                                  })
+                            }) | flex,
                         })
-                    })| border | color(Color::BlueViolet) /*| size(HEIGHT, LESS_THAN, 40)*/
+                    })| border | color(Color::BlueViolet)
                 });
             }) ;
 }
@@ -464,34 +448,11 @@ void drawing_device::draw_fight(){
 };
 
 
-//         query patterns
-// host_game {0, none, none}                    not used on client side
-// join_game {1, room_id_32123, none}           not used on client side
-// change_name {2, new_name, none}              not used on client side
-// finish_turn {3, none, none}
-// chat_msg {4, Frank, sdfsfsdf}
-// exit {5, none, none}                         not used on client side
-// leave_game {6, none, none}
-// ready {7, none, none}
-// unready {8, none, none}
-// opponent_joined {9, Frank, none}
-// start_fight {10, none, none}
-// get_hosted_rooms_list {11, none, none}
-// add_hosted_room {12, room_id, Dodg&Joe}
-// remove_hosted_room {13, room_id, none}
-// player_joined {14, Frank, not_ready}
-// chose_cell {15, 0-8, none}
-// your_turn {16, none, none}
-// you_lost {17,123,none} // paint losing cells
-// restart_fight {18, none, none}
-// tie {19,none,none}
-
 void drawing_device::event_handler(){
-//    cout << "Event handler invoked\n";
     switch (stage_) {
         case(game_stage::menu) : {
             switch (selected_entry_) {
-                case(0) : { // host_game {0, none, none}
+                case(0) : {
                     send(Query("0, none, none"));
                     draw_host_game();
                     break;
@@ -549,7 +510,6 @@ void drawing_device::event_handler(){
             break;
         }
         default: {
-//            cout << "Unknown stage\n";
             break;
         }
     }
@@ -561,8 +521,6 @@ void drawing_device::event_handler(){
 void drawing_device::set_queue_ptr(const shared_ptr<threadsafe_q<Query>> ptr){
     queries_to_send_ = ptr;
 };
-
-
 
 
 //         query patterns
@@ -586,8 +544,6 @@ void drawing_device::set_queue_ptr(const shared_ptr<threadsafe_q<Query>> ptr){
 // you_lost {17,123,none} // paint losing cells
 // restart_fight {18, none, none}
 // tie {19,none,none}
-
-
 void drawing_device::process_query(shared_ptr<Query> q_ptr){
     int q_type = stoi(q_ptr->type_);
     switch (q_type) {
@@ -595,13 +551,10 @@ void drawing_device::process_query(shared_ptr<Query> q_ptr){
         //        if(__receive_world_messages_flag__)
         //            process_this_query();
             Chat_msg msg(q_ptr->sender_, q_ptr->data_);
-            chat_messages_.push_back(msg);
+            chat_messages_.push_back(move(msg));
             break;
         }
         case(6) : { // leave_game {6, none, none}
-
-
-
             if (in_fight_.load()){
                 reset_game_field();
                 draw_host_game();
