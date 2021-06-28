@@ -16,26 +16,20 @@ using namespace std;
 using namespace boost::asio;
 namespace asio = boost::asio;
 
-
-
-
-
 class tcp_server{
 public:
     explicit tcp_server(io_context& io_context, const int& port);
-
+    tcp_server(const tcp_server&) = delete;
+    tcp_server& operator=(const tcp_server&) = delete;
 
 private:
     void start_accept();
     void handle_accept(session::pointer new_session, const boost::system::error_code& error);
-
     io_context& io_context_;
     ip::tcp::acceptor acceptor_;
-
     vector<future<void>> fut_vect;
     shared_ptr<thread_safe_unordered_map<string ,session::pointer>> clients_; // [id:session]
     shared_ptr<thread_safe_unordered_map<string ,shared_ptr<room>>> rooms_;
-
 };
 
 
