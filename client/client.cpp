@@ -11,7 +11,7 @@ client::client(io_context& io_context, const string& hostname, const string& por
 
     queries_to_send_ = make_shared<threadsafe_q<Query>>();
 
-    service_msg(msg_type::DEBUG,  "Connected to " ,remote_endpoint.address(), ":", remote_endpoint.port());
+    service_msg(msg_type::INFO,  "Connected to " ,remote_endpoint.address(), ":", remote_endpoint.port());
 
 }
 
@@ -48,20 +48,15 @@ string client::read(){
     boost::asio::read(socket_, buffer(read_buffer, 1024), /*boost::asio::transfer_all(), */read_error);
 
     if (!read_error){
-//        service_msg(msg_type::DEBUG,  "Received from server: ", read_buffer);
-
         return string(read_buffer);
     }
 
     else {
         ui_->set_title(L"Server is offline");
-//        service_msg(msg_type::DEBUG,  "Failed reading from socket: ", read_error.message());
         online_.store(false);
         return "Error";
     }
 }
-
-
 
 
 // main loop
