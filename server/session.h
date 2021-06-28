@@ -9,31 +9,28 @@
 
 #include "tools.h"
 
-
 using namespace std;
 using namespace boost::asio;
 namespace asio = boost::asio;
 
-
-
 class room;
 
 class session : public enable_shared_from_this<session>{
-
 public:
     using pointer = std::shared_ptr<session>;
 
     session(io_context& io_context);
+    session& operator=(const session&) = delete;
+    session(const session&) = delete;
 
     static pointer create(io_context& io_context);
     ip::tcp::socket& socket();
-
     string read();
-    void send(string msg);
+    void send(const string& msg);
     void send_opponent(const shared_ptr<Query> q_ptr);
     void send_opponent(const string& msg);
-    void send_roommates(string msg);
-    void send_everyone(string msg); // except yourself
+    void send_roommates(const string& msg);
+    void send_everyone(const string& msg); // except yourself
     void send_everyone(const shared_ptr<Query> q_ptr); // except yourself
     void start();
     void background_reading();
@@ -47,30 +44,26 @@ public:
     string get_username();
     bool is_ready();
 
-
 private:
     ip::tcp::socket socket_;
     shared_ptr<thread_safe_unordered_map<string ,session::pointer>> clients_; // [id:session]
     shared_ptr<thread_safe_unordered_map<string ,shared_ptr<room>>> rooms_;
     shared_ptr<room> room_ptr_;
     threadsafe_q<Query> queries_;
-
     vector<future<void>> futures_;
-
     string username_ = "Default";
     string id_;
     string room_id_;
-
     atomic<bool> online_;
     atomic<bool> ready_;
-
-
 };
 
 
 class room {
 public:
     room(session::pointer ptr);
+    room(const room&) = delete;
+    room& operator=(const room&) = delete;
     void add_player(session::pointer ptr);
     void remove_player(session::pointer ptr);
     bool is_full();

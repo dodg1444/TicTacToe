@@ -6,7 +6,7 @@ using pointer = shared_ptr<session>;
 
 session::session(io_context& io_context) : socket_(io_context){
     online_ = true;
-    debug_msg("New session established");
+    cout << "New client connected\n";
 }
 
 
@@ -18,9 +18,6 @@ pointer session::create(io_context& io_context){
 ip::tcp::socket& session::socket(){
     return socket_;
 }
-
-
-
 
 
 string session::read(){
@@ -41,12 +38,13 @@ string session::read(){
     else{
         debug_msg("Failed reading from socket\n");
         online_.store(false);
+        cout << "Client disconnected\n";
         return "Error on read";
     }
 }
 
 
-void session::send(string msg){
+void session::send(const string& msg){
     boost::system::error_code write_error;
     size_t buffer_size = 1024;
 
@@ -207,12 +205,8 @@ void session::process_query(shared_ptr<Query> q_ptr){
 
                     else
                         send("16,none,none");
-
                 }
             }
-
-
-
             break;
         }
         case(8) : {
@@ -253,13 +247,10 @@ void session::process_query(shared_ptr<Query> q_ptr){
 
             break;
         }
-
         case(19) : { // tie
             send_opponent(q_ptr);
             break;
         }
-
-
     }
 }
 
@@ -283,7 +274,7 @@ void session::clean_up(){
 };
 
 
-void session::send_everyone(string msg){
+void session::send_everyone(const string& msg){
     auto clients = clients_->get_values();
 
     for (const auto& client : clients){
@@ -301,24 +292,6 @@ void session::send_everyone(const shared_ptr<Query> q_ptr){
     }
 }
 
-//         query patterns
-// host_game {0, none, none}                    not used on client side
-// join_game {1, room_id_32123, none}           not used on client side
-// change_name {2, new_name, none}              not used on client side
-// finish_turn {3, none, none}
-// chat_msg {4, Frank, sdfsfsdf}
-// exit {5, none, none}                         not used on client side
-// leave_game {6, none, none}
-// ready {7, none, none}
-// unready {8, none, none}
-// opponent_joined {9, Frank, none}
-// start_fight {10, none, none}
-// get_hosted_rooms_list {11, none, none}
-// add_hosted_room {12, room_id, Dodg&Joe}
-// remove_hosted_room {13, room_id, none}
-// player_joined {14, Frank, not_ready}
-// chose_cell {15, 0-8, none}
-
 
 string session::get_id(){
     return id_;
@@ -328,7 +301,7 @@ bool session::is_ready(){
     return ready_.load();
 }
 
-void session::send_roommates(string msg){
+void session::send_roommates(const string& msg){
     auto room_ptr = rooms_->get_value(room_id_);
     room_ptr->player_one_->send(msg);
     room_ptr->player_two_->send(msg);
@@ -347,7 +320,6 @@ void session::send_opponent(const shared_ptr<Query> q_ptr){
 
          else
              room_ptr_->player_one_->send(q_ptr->type_+","+q_ptr->sender_+"," + q_ptr->data_);
-
      }
 
 };
@@ -362,19 +334,6 @@ void session::send_opponent(const string& msg){
 
     }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -400,7 +359,6 @@ void room::remove_player(session::pointer ptr){
 
     else
         player_two_ = nullptr;
-
 };
 
 
@@ -428,7 +386,6 @@ void room::set_id(const string& room_id){
 
 
 string room::form_query(){
-    // add_hosted_room {12, room_id, Dodg&Joe}
     string query = "12,";
     query += id_ + ",";
     if (is_full()){
@@ -444,7 +401,6 @@ string room::form_query(){
         if (player_two_)
             query += player_two_->get_username();
     }
-
     return query;
 };
 
