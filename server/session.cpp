@@ -6,6 +6,7 @@ using pointer = shared_ptr<session>;
 
 session::session(io_context& io_context) : socket_(io_context){
     online_ = true;
+    get_time();
     cout << "New client connected\n";
 }
 
@@ -38,6 +39,7 @@ string session::read(){
     else{
         debug_msg("Failed reading from socket\n");
         online_.store(false);
+        get_time();
         cout << "Client disconnected\n";
         return "Error on read";
     }

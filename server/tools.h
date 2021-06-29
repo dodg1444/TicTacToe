@@ -35,6 +35,14 @@ inline void debug_msg(Arg&& arg, Args&&... args)
 }
 
 
+static void get_time(){
+    time_t curr_time;
+    curr_time = time(nullptr);
+    tm *tm_local = localtime(&curr_time);
+    cout << tm_local->tm_hour << ":" << tm_local->tm_min << ":" << tm_local->tm_sec << " ";
+}
+
+
 // wrapper for async
 // Thanks Scott
 template <typename F, typename... Ts>
