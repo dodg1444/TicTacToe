@@ -125,7 +125,7 @@ void drawing_device::init_ui(){
 
     exit_tab_ = Renderer(exit_container_, [&] {
         return vbox({
-                    text(L"Already leaving?...") | size(HEIGHT, EQUAL, number_of_shown_messages_),
+                    text(L"Already leaving?..."),
                    hbox({
                        yes_button_->Render(),
                        filler(),
@@ -142,11 +142,12 @@ void drawing_device::init_ui(){
         if (!my_selection_){
             set_title(L"You are ready to rip and tear until it's done");
             send(Query("7,none,none"));
+            ready_color_ = Color::DarkGreen;
         }
         else {
             set_title(L"You're not ready to smash");
             send(Query("8,none,none"));
-
+            ready_color_ = Color::DarkRed;
         }
     };
 
@@ -165,9 +166,9 @@ void drawing_device::init_ui(){
 
     host_game_tab_ = Renderer(host_game_container_, [&]{
         return vbox({
-                        hbox(text(L" * " + nickname_ + L"      "), align_right(ready_toggle_->Render())),
-                        hbox(text(L" * " + opponent_nickname_ + L"      "), align_right(text(opponent_status_))),
-                        filler() | size(HEIGHT, EQUAL, number_of_shown_messages_),
+                        hbox(text(L" * " + nickname_ + L"      "), align_right(ready_toggle_->Render() | color(ready_color_))) | border,
+                        hbox(text(L" * " + opponent_nickname_ + L"      "), align_right(text(opponent_status_)) | color(opponent_ready_color_)) | border,
+                        filler() | size(HEIGHT, EQUAL, number_of_shown_messages_ - 15),
                         hbox(hcenter(leave_game_button_->Render()))
                     });
     });
@@ -206,7 +207,7 @@ void drawing_device::init_ui(){
     join_game_tab_ = Renderer(join_game_container_, [&]{
         return vbox({
                        rooms_list_->Render(),
-                       filler() | size(HEIGHT, EQUAL, number_of_shown_messages_ - hosted_rooms_.size()),
+                       filler() | size(HEIGHT, EQUAL, number_of_shown_messages_/2 - hosted_rooms_.size() + 3),
                        leave_lobby_button_->Render()
                     });
     });
@@ -269,7 +270,7 @@ void drawing_device::init_ui(){
 
 
 
-    exit_button_text_ = L"Leave";
+    exit_button_text_ = L" Leave  ";
 
     leave_fight_button_ = Button(exit_button_text_, [&]{
         send(Query("6,none,none"));
@@ -284,7 +285,7 @@ void drawing_device::init_ui(){
 
         // reset buttons and vars
         reset_game_field();
-    });
+    }, true);
 
     spinner_ = Renderer([&]{
         return hbox({
@@ -321,15 +322,14 @@ void drawing_device::init_ui(){
                             cells_[7]->Render()| flex_grow | color(cell_colors_[7]),
                             cells_[8]->Render()| flex_grow | color(cell_colors_[8]),
                         })
-                    }) | border ,
-                    filler() | yflex_grow,
-                    text(L""),
+                    }) | border,
+                    text(L"") | size(HEIGHT, EQUAL, 2),
                     hbox({
                             leave_fight_button_->Render(),
                             filler(),
-                            spinner_->Render(),
+                            hcenter(spinner_->Render()),
                             filler(),
-                            restart_fight_button_->Render()
+                            align_right(restart_fight_button_->Render())
                         })
                 });
     });
@@ -365,27 +365,29 @@ void drawing_device::init_ui(){
 
     layout_ = Renderer(container_, [&]{
         return vbox({
-                    vbox({
+
                         hbox({
-                        hcenter(bold(text(upper_text_)))}),
+                        hcenter(bold(text(upper_text_))) | color(main_color_)}),
                         separator(),
                         hbox({
-                            vbox({hcenter(bold(text(left_column_text_))) | color(main_color_),
+                            vbox({
+                                  hcenter(bold(text(left_column_text_))) | color(main_color_),
                                   separator(),
                                   left_side_content_->Render(),
-                            }) | flex,
+                            }) | size(HEIGHT, EQUAL, number_of_shown_messages_) | size(WIDTH, EQUAL, 42),
                             separator(),
-                            vbox({hcenter(bold(text(L"Chat"))) | color(main_color_),
+                            vbox({
+                                  hcenter(bold(text(L"Chat"))) | color(main_color_),
                                   separator(),
-                                  chat_printed_messages_->Render() | size(HEIGHT, EQUAL, number_of_shown_messages_),
+                                  chat_printed_messages_->Render() | flex,
                                   hbox({
                                       window(text(L"Message: "), chat_input_->Render()) | color(Color::Yellow3),
                                       clear_chat_button_->Render() | color(Color::Yellow3)
                                   })
-                            }) | flex,
+                            }) | size(WIDTH, EQUAL, 42)
                         })
-                    })| border | color(Color::BlueViolet)
-                });
+                    })| border | color(Color::BlueViolet) | size(HEIGHT, EQUAL, number_of_shown_messages_)
+                                                          | size(WIDTH, EQUAL, 84);
             }) ;
 }
 
@@ -483,9 +485,9 @@ void drawing_device::event_handler(){
                     break;
                 }
                 case(1) : {
-                    set_title(L"In development");
-                    this_thread::sleep_for(2s);
-                    draw_settings();
+                    Chat_msg msg(L"TicTacToe", L"This section is under construction");
+                    chat_messages_.push_back(move(msg));
+                    chat_msg_.clear();
                     break;
                 }
                 case(2) : { // git
@@ -563,16 +565,19 @@ void drawing_device::process_query(shared_ptr<Query> q_ptr){
             set_title(L"Waiting for an opponent...");
             opponent_nickname_ = L"Waiting...";
             opponent_status_ = L"Waiting...";
+            opponent_ready_color_ = Color::DarkRed;
 
             break;
         }
         case(7) : { // ready {7, none, none}
+            opponent_ready_color_ = Color::DarkGreen;
             opponent_status_ = L"Ready";
-
 
             break;
         }
         case(8) : { // unready {8, none, none}
+
+            opponent_ready_color_ = Color::DarkRed;
             opponent_status_ = L"Not ready";
 
             break;
@@ -615,11 +620,15 @@ void drawing_device::process_query(shared_ptr<Query> q_ptr){
         case(14) : { // player_joined {14, Frank, not_ready}
             opponent_nickname_ = to_wstring(q_ptr->sender_);
 
-            if (q_ptr->data_ == "0")
+            if (q_ptr->data_ == "0"){
                 opponent_status_ = L"Not ready";
+                opponent_ready_color_ = Color::DarkRed;
+            }
 
-            else
+            else{
                 opponent_status_ = L"Ready";
+                opponent_ready_color_ = Color::DarkGreen;
+            }
 
 
             break;
@@ -739,7 +748,7 @@ void drawing_device::set_defeat_cells_color(const int cells_numbers){
 
 void drawing_device::set_nickname(const string& nickname){
     nickname_ = to_wstring(nickname);
-    send(Query("2,"+to_string(new_name_) + ",none"));
+    send(Query("2," + nickname + ",none"));
 };
 
 

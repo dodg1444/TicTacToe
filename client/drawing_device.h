@@ -115,7 +115,7 @@ private:
     vector<Chat_msg> chat_messages_;
     wstring chat_msg_;
     Elements elems_; // queue<Element> elems_;
-    size_t number_of_shown_messages_ = 12; // add to the settings
+    size_t number_of_shown_messages_ = 24; // add to the settings
 
 ////////////////////////////////// CHANGE_NAME ////////////////////////////////////
     Component change_name_widget_;
@@ -141,6 +141,8 @@ private:
     wstring opponent_nickname_ = L"Waiting...";
     Component host_game_tab_;
     Component leave_game_button_;
+    Color ready_color_ = Color::DarkRed;
+    Color opponent_ready_color_ = Color::DarkRed;
 
 //////////////////////////////// JOIN GAME ////////////////////////////////////////
     Component join_game_container_;

@@ -23,15 +23,7 @@ int main(int argc, const char* argv[]){
 
         client game_client(io_context, hostname, port);
         game_client.init(nickname);
-
-        boost::system::error_code error;
-        if (error == boost::asio::error::eof)
-            service_msg(msg_type::DEBUG, "connection closed by server");
-
-        else if (error)
-            throw boost::system::system_error(error);
-        }
-
+    }
 
     catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
